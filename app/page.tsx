@@ -25,9 +25,25 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
-    const savedSection = localStorage.getItem("activeSection")
-    if (savedSection) {
-      setActiveSection(savedSection)
+    // Simple client-side auth check (optional - remove if not needed)
+    const token = document.cookie.split(';').find(c => c.trim().startsWith('token='))
+    // Uncomment below if you want to enforce authentication
+    // if (!token) {
+    //   window.location.href = '/login'
+    //   return
+    // }
+
+    // Check URL params for section
+    const params = new URLSearchParams(window.location.search)
+    const sectionParam = params.get('section')
+    
+    if (sectionParam) {
+      setActiveSection(sectionParam)
+    } else {
+      const savedSection = localStorage.getItem("activeSection")
+      if (savedSection) {
+        setActiveSection(savedSection)
+      }
     }
     setMounted(true)
   }, [])
@@ -35,6 +51,11 @@ export default function Home() {
   useEffect(() => {
     if (mounted) {
       localStorage.setItem("activeSection", activeSection)
+      // Update URL without page reload
+      const newUrl = activeSection === "dashboard" 
+        ? "/" 
+        : `/?section=${activeSection}`
+      window.history.pushState({}, '', newUrl)
     }
   }, [activeSection, mounted])
 

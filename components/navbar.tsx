@@ -9,6 +9,8 @@ interface NavbarProps {
   activeSection: string
 }
 
+
+
 export function Navbar({ sidebarOpen, setSidebarOpen, activeSection }: NavbarProps) {
 
   const getSectionTitle = () => {
@@ -45,8 +47,12 @@ export function Navbar({ sidebarOpen, setSidebarOpen, activeSection }: NavbarPro
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => {
-            // Add logout logic here
-            console.log("Logging out...")
+            // Clear auth token
+            document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+            // Clear local storage
+            localStorage.clear()
+            // Redirect to login
+            window.location.href = '/login'
           }}
           className="flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-white bg-destructive hover:bg-destructive/90 rounded-lg transition-all shadow-sm hover:shadow-md cursor-pointer"
         >

@@ -24,6 +24,11 @@ interface DashboardProps {
   activeSection: string
 }
 
+
+
+
+
+
 export function Dashboard({ activeSection }: DashboardProps) {
   return (
     <motion.div

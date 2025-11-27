@@ -21,28 +21,26 @@ export function DashboardOverview() {
       },
     },
   }
-
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   }
-
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
             <motion.div key={stat.label} variants={itemVariants}>
-              <Card className="p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group cursor-pointer">
+              <Card className="p-8 md:p-10 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group cursor-pointer">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative z-10 flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    <p className="text-2xl md:text-3xl font-bold text-foreground mt-1">{stat.value}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">{stat.label}</p>
+                    <p className="text-xl md:text-2xl font-bold text-foreground mt-2">{stat.value}</p>
                   </div>
-                  <div className={`w-12 h-12 rounded-lg ${stat.color} flex items-center justify-center`}>
-                    <Icon size={24} className="text-primary" />
+                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-lg ${stat.color} flex items-center justify-center`}>
+                    <Icon size={22} className="md:w-7 md:h-7 text-primary" />
                   </div>
                 </div>
               </Card>
@@ -50,30 +48,6 @@ export function DashboardOverview() {
           )
         })}
       </div>
-
-      <Card className="p-6 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div className="relative z-10">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="flex items-center justify-between p-3 hover:bg-primary/5 rounded transition-colors"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">Activity {i}</p>
-                  <p className="text-xs text-muted-foreground">2 hours ago</p>
-                </div>
-                <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded font-medium">New</span>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </Card>
     </motion.div>
   )
 }

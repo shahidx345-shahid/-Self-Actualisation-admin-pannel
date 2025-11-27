@@ -1,7 +1,7 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { Users, Music, Video, Menu, X } from "lucide-react"
+import { Users, FileText, Music, Video, Menu, X } from "lucide-react"
 
 interface SidebarProps {
   activeSection: string
@@ -9,6 +9,8 @@ interface SidebarProps {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
 }
+
+
 
 export function Sidebar({ activeSection, setActiveSection, isOpen, setIsOpen }: SidebarProps) {
   const menuItems = [
@@ -63,12 +65,18 @@ export function Sidebar({ activeSection, setActiveSection, isOpen, setIsOpen }: 
           <nav className="flex-1 space-y-0.5 sm:space-y-1 overflow-y-auto">
             {menuItems.map((item) => {
               const Icon = item.icon
+              const href = item.id === "dashboard" ? "/" : `/?section=${item.id}`
+              
               return (
-                <motion.button
+                <motion.a
                   key={item.id}
-                  onClick={() => {
+                  href={href}
+                  onClick={(e) => {
+                    e.preventDefault()
                     setActiveSection(item.id)
                     setIsOpen(false)
+                    // Update URL
+                    window.history.pushState({}, '', href)
                   }}
                   whileHover={{ x: 4 }}
                   whileTap={{ scale: 0.98 }}
@@ -80,7 +88,7 @@ export function Sidebar({ activeSection, setActiveSection, isOpen, setIsOpen }: 
                 >
                   <Icon size={20} className="flex-shrink-0" />
                   <span className="font-medium truncate">{item.label}</span>
-                </motion.button>
+                </motion.a>
               )
             })}
           </nav>
