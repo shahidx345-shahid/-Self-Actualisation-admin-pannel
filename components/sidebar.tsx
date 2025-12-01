@@ -17,6 +17,7 @@ export function Sidebar({ activeSection, setActiveSection, isOpen, setIsOpen }: 
     { id: "dashboard", label: "Dashboard", icon: Menu },
     { id: "users", label: "User Management", icon: Users },
     { id: "audios", label: "Audios", icon: Music },
+    { id: "videos", label: "Videos", icon: Video },
     { id: "learn-grow", label: "Learn & Grow", icon: FileText },
   ]
 

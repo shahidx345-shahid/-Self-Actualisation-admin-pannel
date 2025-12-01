@@ -222,6 +222,136 @@ export async function deleteAudio(id: string): Promise<void> {
   )
 }
 
+// Video Management APIs
+
+export type AdminVideo = {
+  id: string
+  title: string
+  description?: string
+  category?: string | null
+  videoUrl: string
+  thumbnailUrl?: string | null
+  durationSeconds: number
+  isActive: boolean
+  sortOrder: number
+  createdAt: string
+}
+
+const mapVideo = (raw: any): AdminVideo => ({
+  id: String(raw._id ?? raw.id),
+  title: String(raw.title ?? ""),
+  description: raw.description ?? undefined,
+  category: raw.category ?? null,
+  videoUrl: String(raw.videoUrl ?? ""),
+  thumbnailUrl: raw.thumbnailUrl ?? null,
+  durationSeconds: Number(raw.durationSeconds ?? 0),
+  isActive: Boolean(raw.isActive ?? true),
+  sortOrder: Number(raw.sortOrder ?? 0),
+  createdAt: String(raw.createdAt ?? new Date().toISOString()),
+})
+
+export async function fetchAdminVideos(params?: {
+  page?: number
+  limit?: number
+  search?: string
+  category?: string
+  status?: "active" | "inactive" | "all"
+}): Promise<ApiListResponse<AdminVideo>> {
+  const query = new URLSearchParams()
+  if (params?.page) query.set("page", String(params.page))
+  if (params?.limit) query.set("limit", String(params.limit))
+  if (params?.search) query.set("search", params.search)
+  if (params?.category) query.set("category", params.category)
+  if (params?.status) query.set("status", params.status)
+
+  const qs = query.toString()
+  const path = `/api/admin/videos${qs ? `?${qs}` : ""}`
+
+  const res = await apiFetch<ApiListResponse<any>>(path, {}, { auth: true })
+  return {
+    ...res,
+    data: res.data.map(mapVideo),
+  }
+}
+
+type CreateVideoPayload = {
+  title: string
+  description?: string
+  category?: string
+  durationSeconds: number
+  sortOrder?: number
+  isActive?: boolean
+  video?: File
+  thumbnail?: File
+  videoUrl?: string
+  thumbnailUrl?: string
+}
+
+type UpdateVideoPayload = Partial<CreateVideoPayload>
+
+export async function createVideo(payload: CreateVideoPayload): Promise<AdminVideo> {
+  const formData = new FormData()
+  
+  formData.append("title", payload.title)
+  if (payload.description) formData.append("description", payload.description)
+  if (payload.category) formData.append("category", payload.category)
+  formData.append("durationSeconds", String(payload.durationSeconds))
+  if (payload.sortOrder !== undefined) formData.append("sortOrder", String(payload.sortOrder))
+  if (payload.isActive !== undefined) formData.append("isActive", String(payload.isActive))
+  
+  if (payload.video) formData.append("video", payload.video)
+  if (payload.thumbnail) formData.append("thumbnail", payload.thumbnail)
+  if (payload.videoUrl) formData.append("videoUrl", payload.videoUrl)
+  if (payload.thumbnailUrl) formData.append("thumbnailUrl", payload.thumbnailUrl)
+
+  const res = await apiFetch<ApiSuccessResponse<any>>(
+    "/api/admin/videos",
+    {
+      method: "POST",
+      body: formData,
+    },
+    { auth: true }
+  )
+
+  return mapVideo(res.data)
+}
+
+export async function updateVideo(id: string, payload: UpdateVideoPayload): Promise<AdminVideo> {
+  const formData = new FormData()
+  
+  if (payload.title) formData.append("title", payload.title)
+  if (payload.description !== undefined) formData.append("description", payload.description || "")
+  if (payload.category !== undefined) formData.append("category", payload.category || "")
+  if (payload.durationSeconds !== undefined) formData.append("durationSeconds", String(payload.durationSeconds))
+  if (payload.sortOrder !== undefined) formData.append("sortOrder", String(payload.sortOrder))
+  
+  if (payload.video) formData.append("video", payload.video)
+  if (payload.thumbnail) formData.append("thumbnail", payload.thumbnail)
+  if (payload.videoUrl !== undefined) formData.append("videoUrl", payload.videoUrl || "")
+  if (payload.thumbnailUrl !== undefined) formData.append("thumbnailUrl", payload.thumbnailUrl || "")
+
+  const res = await apiFetch<ApiSuccessResponse<any>>(
+    `/api/admin/videos/${id}`,
+    {
+      method: "PATCH",
+      body: formData,
+    },
+    { auth: true }
+  )
+
+  return mapVideo(res.data)
+}
+
+export async function deleteVideo(id: string): Promise<void> {
+  await apiFetch<ApiSuccessResponse<void>>(
+    `/api/admin/videos/${id}`,
+    {
+      method: "DELETE",
+    },
+    { auth: true }
+  )
+}
+
 // Admin Authentication APIs
 
 export type Admin = {

@@ -11,6 +11,9 @@ const UserManagementSection = lazy(() =>
   import("./sections/user-management").then((mod) => ({ default: mod.UserManagementSection })),
 )
 const AudioSection = lazy(() => import("./sections/audio").then((mod) => ({ default: mod.AudioSection })))
+const VideoSection = lazy(() =>
+  import("./sections/video").then((mod) => ({ default: mod.VideoSection })),
+)
 const LearnGrowSection = lazy(() =>
   import("./sections/learn-grow").then((mod) => ({ default: mod.LearnGrowSection })),
 )
@@ -39,6 +42,7 @@ export function Dashboard({ activeSection }: DashboardProps) {
         {activeSection === "dashboard" && <DashboardOverview />}
         {activeSection === "users" && <UserManagementSection />}
         {activeSection === "audios" && <AudioSection />}
+        {activeSection === "videos" && <VideoSection />}
         {activeSection === "learn-grow" && <LearnGrowSection />}
       </Suspense>
     </motion.div>
