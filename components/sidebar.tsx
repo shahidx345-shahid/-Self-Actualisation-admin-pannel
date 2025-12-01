@@ -16,7 +16,8 @@ export function Sidebar({ activeSection, setActiveSection, isOpen, setIsOpen }: 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Menu },
     { id: "users", label: "User Management", icon: Users },
-    { id: "learn-grow", label: "Learn & Grow", icon: Music },
+    { id: "audios", label: "Audios", icon: Music },
+    { id: "learn-grow", label: "Learn & Grow", icon: FileText },
   ]
 
   return (
@@ -39,13 +40,13 @@ export function Sidebar({ activeSection, setActiveSection, isOpen, setIsOpen }: 
         initial={false}
         animate={{ x: isOpen ? 0 : -300 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border z-50 lg:static lg:z-auto lg:translate-x-0 lg:!transform-none shadow-lg flex flex-col"
+        className="fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border z-50 lg:static lg:z-auto lg:transform-none transform-none! shadow-lg flex flex-col"
       >
         <div className="flex flex-col h-full p-3 sm:p-4 md:p-6">
           {/* Logo/Header */}
           <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 rounded-lg bg-sidebar-primary flex items-center justify-center flex-shrink-0">
+              <div className="w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
                 <span className="text-sidebar-primary-foreground font-bold text-xs sm:text-sm">SA</span>
               </div>
               <h1 className="text-xs sm:text-sm md:text-lg font-bold text-sidebar-foreground truncate">
@@ -54,7 +55,7 @@ export function Sidebar({ activeSection, setActiveSection, isOpen, setIsOpen }: 
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="lg:hidden text-sidebar-foreground hover:text-sidebar-primary transition-colors flex-shrink-0 p-1 cursor-pointer"
+              className="lg:hidden text-sidebar-foreground hover:text-sidebar-primary transition-colors shrink-0 p-1 cursor-pointer"
               aria-label="Close sidebar"
             >
               <X size={18} className="sm:w-5 sm:h-5" />
@@ -86,7 +87,7 @@ export function Sidebar({ activeSection, setActiveSection, isOpen, setIsOpen }: 
                       : "text-sidebar-foreground hover:bg-gray-100 hover:text-sidebar-primary"
                   }`}
                 >
-                  <Icon size={20} className="flex-shrink-0" />
+                  <Icon size={20} className="shrink-0" />
                   <span className="font-medium truncate">{item.label}</span>
                 </motion.a>
               )

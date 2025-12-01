@@ -6,37 +6,36 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff, Lock, Mail } from "lucide-react"
+import { loginAdmin } from "@/lib/api"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
     
     try {
-      // Add your authentication API call here
-      // Example: const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ email, password })
-      // })
+      const response = await loginAdmin(email.trim(), password)
       
-      // For now, simulate login with demo credentials
-      setTimeout(() => {
-        // Set auth token (replace with real token from your API)
-        document.cookie = 'token=demo-auth-token; path=/; max-age=86400' // 24 hours
-        
-        setIsLoading(false)
+      if (response.success && response.data.token) {
+        // Token is automatically stored by loginAdmin function
         // Redirect to dashboard after successful login
         window.location.href = "/"
-      }, 1500)
-    } catch (error) {
-      console.error("Login failed:", error)
+      } else {
+        setError("Login failed. Please check your credentials.")
+        setIsLoading(false)
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Login failed. Please try again."
+      setError(message)
       setIsLoading(false)
-      alert("Login failed. Please try again.")
+      console.error("Login failed:", err)
     }
   }
 
@@ -66,6 +65,13 @@ export default function LoginPage() {
               Sign in to Self-Actualisation Admin Panel
             </p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded text-sm text-destructive">
+              {error}
+            </div>
+          )}
 
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">

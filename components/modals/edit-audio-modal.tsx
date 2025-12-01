@@ -1,32 +1,47 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { X } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { createAudio } from "@/lib/api"
+import { updateAudio, type AdminAudio } from "@/lib/api"
 
-interface AddAudioModalProps {
+interface EditAudioModalProps {
   isOpen: boolean
   onClose: () => void
+  audio: AdminAudio | null
   onSuccess?: () => void
 }
 
-export function AddAudioModal({ isOpen, onClose, onSuccess }: AddAudioModalProps) {
+export function EditAudioModal({ isOpen, onClose, audio, onSuccess }: EditAudioModalProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("")
   const [durationSeconds, setDurationSeconds] = useState("")
-  const [sortOrder, setSortOrder] = useState("")
-  const [isActive, setIsActive] = useState(true)
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [audioPreview, setAudioPreview] = useState<string | null>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (!isOpen) return null
+  useEffect(() => {
+    if (audio) {
+      setTitle(audio.title)
+      setDescription(audio.description || "")
+      setCategory(audio.category || "")
+      setDurationSeconds(String(audio.durationSeconds))
+      setAudioFile(null)
+      setThumbnailFile(null)
+      setAudioPreview(audio.audioUrl || null)
+      setThumbnailPreview(audio.thumbnailUrl || null)
+      setError(null)
+    }
+  }, [audio])
+
+  if (!isOpen || !audio) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,42 +57,24 @@ export function AddAudioModal({ isOpen, onClose, onSuccess }: AddAudioModalProps
       return
     }
 
-    if (!audioFile && !title) {
-      setError("Either audio file or audio URL is required")
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
-      await createAudio({
+      await updateAudio(audio.id, {
         title: title.trim(),
         description: description.trim() || undefined,
         category: category.trim() || undefined,
         durationSeconds: Number(durationSeconds),
-        sortOrder: sortOrder ? Number(sortOrder) : 0,
-        isActive,
         audio: audioFile || undefined,
         thumbnail: thumbnailFile || undefined,
       })
 
-      // Reset form
-      setTitle("")
-      setDescription("")
-      setCategory("")
-      setDurationSeconds("")
-      setSortOrder("")
-      setIsActive(true)
-      setAudioFile(null)
-      setThumbnailFile(null)
-      setError(null)
-
       onSuccess?.()
       onClose()
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to create audio"
+      const message = err instanceof Error ? err.message : "Failed to update audio"
       setError(message)
-      console.error("Failed to create audio:", err)
+      console.error("Failed to update audio:", err)
     } finally {
       setIsSubmitting(false)
     }
@@ -101,7 +98,7 @@ export function AddAudioModal({ isOpen, onClose, onSuccess }: AddAudioModalProps
       >
         <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Upload Audio</h3>
+            <h3 className="text-lg font-semibold text-foreground">Edit Audio</h3>
             <button onClick={onClose} className="text-muted-foreground hover:text-foreground cursor-pointer">
               <X size={20} />
             </button>
@@ -159,44 +156,78 @@ export function AddAudioModal({ isOpen, onClose, onSuccess }: AddAudioModalProps
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground block mb-2">Sort Order</label>
-              <Input
-                type="number"
-                placeholder="0"
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground block mb-2">Audio File</label>
+              <label className="text-sm font-medium text-foreground block mb-2">
+                Audio File (optional, leave empty to keep current)
+              </label>
+              {audioPreview && !audioFile && (
+                <div className="mb-2 p-3 bg-secondary/30 rounded-lg border border-border">
+                  <p className="text-xs text-muted-foreground mb-2">Current Audio:</p>
+                  <audio controls className="w-full">
+                    <source src={audioPreview} type="audio/mpeg" />
+                    <source src={audioPreview} type="audio/mp3" />
+                    <source src={audioPreview} type="audio/wav" />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              )}
+              {audioFile && (
+                <div className="mb-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <p className="text-xs text-primary mb-1">New file selected: {audioFile.name}</p>
+                </div>
+              )}
               <Input
                 type="file"
                 accept="audio/*"
-                onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  setAudioFile(file)
+                  if (file) {
+                    setAudioPreview(null) // Clear preview when new file is selected
+                  }
+                }}
                 disabled={isSubmitting}
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground block mb-2">Thumbnail Image</label>
+              <label className="text-sm font-medium text-foreground block mb-2">
+                Thumbnail Image (optional, leave empty to keep current)
+              </label>
+              {thumbnailPreview && !thumbnailFile && (
+                <div className="mb-2 p-3 bg-secondary/30 rounded-lg border border-border">
+                  <p className="text-xs text-muted-foreground mb-2">Current Thumbnail:</p>
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden">
+                    <img
+                      src={thumbnailPreview}
+                      alt="Current thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+              {thumbnailFile && (
+                <div className="mb-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <p className="text-xs text-primary mb-1">New file selected: {thumbnailFile.name}</p>
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden mt-2">
+                    <img
+                      src={URL.createObjectURL(thumbnailFile)}
+                      alt="New thumbnail preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
               <Input
                 type="file"
                 accept="image/*"
-                onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  setThumbnailFile(file)
+                  if (file) {
+                    setThumbnailPreview(null) // Clear preview when new file is selected
+                  }
+                }}
                 disabled={isSubmitting}
               />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground block mb-2">Status</label>
-              <select
-                className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
-                value={isActive ? "published" : "draft"}
-                onChange={(e) => setIsActive(e.target.value === "published")}
-                disabled={isSubmitting}
-              >
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
-              </select>
             </div>
             <div className="flex gap-2 pt-4">
               <Button
@@ -209,7 +240,7 @@ export function AddAudioModal({ isOpen, onClose, onSuccess }: AddAudioModalProps
                 Cancel
               </Button>
               <Button type="submit" className="flex-1 cursor-pointer" disabled={isSubmitting}>
-                {isSubmitting ? "Uploading..." : "Upload"}
+                {isSubmitting ? "Updating..." : "Update"}
               </Button>
             </div>
           </form>
@@ -218,3 +249,4 @@ export function AddAudioModal({ isOpen, onClose, onSuccess }: AddAudioModalProps
     </>
   )
 }
+

@@ -10,7 +10,10 @@ const DashboardOverview = lazy(() =>
 const UserManagementSection = lazy(() =>
   import("./sections/user-management").then((mod) => ({ default: mod.UserManagementSection })),
 )
-const LearnGrowSection = lazy(() => import("./sections/learn-grow").then((mod) => ({ default: mod.LearnGrowSection })))
+const AudioSection = lazy(() => import("./sections/audio").then((mod) => ({ default: mod.AudioSection })))
+const LearnGrowSection = lazy(() =>
+  import("./sections/learn-grow").then((mod) => ({ default: mod.LearnGrowSection })),
+)
 
 function SectionFallback() {
   return (
@@ -24,11 +27,6 @@ interface DashboardProps {
   activeSection: string
 }
 
-
-
-
-
-
 export function Dashboard({ activeSection }: DashboardProps) {
   return (
     <motion.div
@@ -40,6 +38,7 @@ export function Dashboard({ activeSection }: DashboardProps) {
       <Suspense fallback={<SectionFallback />}>
         {activeSection === "dashboard" && <DashboardOverview />}
         {activeSection === "users" && <UserManagementSection />}
+        {activeSection === "audios" && <AudioSection />}
         {activeSection === "learn-grow" && <LearnGrowSection />}
       </Suspense>
     </motion.div>
