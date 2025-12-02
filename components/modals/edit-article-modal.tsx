@@ -1,29 +1,43 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { X } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { createArticle } from "@/lib/api"
+import { updateArticle, type AdminArticle } from "@/lib/api"
 
-interface AddArticleModalProps {
+interface EditArticleModalProps {
   isOpen: boolean
   onClose: () => void
+  article: AdminArticle | null
   onSuccess?: () => void
 }
 
-export function AddArticleModal({ isOpen, onClose, onSuccess }: AddArticleModalProps) {
+export function EditArticleModal({ isOpen, onClose, article, onSuccess }: EditArticleModalProps) {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [category, setCategory] = useState("")
   const [readTimeMinutes, setReadTimeMinutes] = useState("")
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (!isOpen) return null
+  useEffect(() => {
+    if (article) {
+      setTitle(article.title)
+      setContent(article.content)
+      setCategory(article.category || "")
+      setReadTimeMinutes(String(article.readTimeMinutes))
+      setThumbnailFile(null)
+      setThumbnailPreview(article.thumbnailUrl || null)
+      setError(null)
+    }
+  }, [article])
+
+  if (!isOpen || !article) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,7 +61,7 @@ export function AddArticleModal({ isOpen, onClose, onSuccess }: AddArticleModalP
     setIsSubmitting(true)
 
     try {
-      await createArticle({
+      await updateArticle(article.id, {
         title: title.trim(),
         content: content.trim(),
         category: category.trim() || undefined,
@@ -55,20 +69,12 @@ export function AddArticleModal({ isOpen, onClose, onSuccess }: AddArticleModalP
         thumbnail: thumbnailFile || undefined,
       })
 
-      // Reset form
-      setTitle("")
-      setContent("")
-      setCategory("")
-      setReadTimeMinutes("")
-      setThumbnailFile(null)
-      setError(null)
-
       onSuccess?.()
       onClose()
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to create article"
+      const message = err instanceof Error ? err.message : "Failed to update article"
       setError(message)
-      console.error("Failed to create article:", err)
+      console.error("Failed to update article:", err)
     } finally {
       setIsSubmitting(false)
     }
@@ -92,7 +98,7 @@ export function AddArticleModal({ isOpen, onClose, onSuccess }: AddArticleModalP
       >
         <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Add Article</h3>
+            <h3 className="text-lg font-semibold text-foreground">Edit Article</h3>
             <button onClick={onClose} className="text-muted-foreground hover:text-foreground cursor-pointer">
               <X size={20} />
             </button>
@@ -155,11 +161,43 @@ export function AddArticleModal({ isOpen, onClose, onSuccess }: AddArticleModalP
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground block mb-2">Thumbnail Image (optional)</label>
+              <label className="text-sm font-medium text-foreground block mb-2">
+                Thumbnail Image (optional, leave empty to keep current)
+              </label>
+              {thumbnailPreview && !thumbnailFile && (
+                <div className="mb-2 p-3 bg-secondary/30 rounded-lg border border-border">
+                  <p className="text-xs text-muted-foreground mb-2">Current Thumbnail:</p>
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden">
+                    <img
+                      src={thumbnailPreview}
+                      alt="Current thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+              {thumbnailFile && (
+                <div className="mb-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <p className="text-xs text-primary mb-1">New file selected: {thumbnailFile.name}</p>
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden mt-2">
+                    <img
+                      src={URL.createObjectURL(thumbnailFile)}
+                      alt="New thumbnail preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
               <Input
                 type="file"
                 accept="image/*"
-                onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  setThumbnailFile(file)
+                  if (file) {
+                    setThumbnailPreview(null) // Clear preview when new file is selected
+                  }
+                }}
                 disabled={isSubmitting}
               />
             </div>
@@ -174,7 +212,7 @@ export function AddArticleModal({ isOpen, onClose, onSuccess }: AddArticleModalP
                 Cancel
               </Button>
               <Button type="submit" className="flex-1 cursor-pointer" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Add Article"}
+                {isSubmitting ? "Updating..." : "Update"}
               </Button>
             </div>
           </form>
@@ -183,3 +221,4 @@ export function AddArticleModal({ isOpen, onClose, onSuccess }: AddArticleModalP
     </>
   )
 }
+

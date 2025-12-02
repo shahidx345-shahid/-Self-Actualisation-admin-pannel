@@ -352,6 +352,128 @@ export async function deleteVideo(id: string): Promise<void> {
   )
 }
 
+// Article Management APIs
+
+export type AdminArticle = {
+  id: string
+  title: string
+  content: string
+  category?: string | null
+  thumbnailUrl?: string | null
+  readTimeMinutes: number
+  isActive: boolean
+  sortOrder: number
+  createdAt: string
+}
+
+const mapArticle = (raw: any): AdminArticle => ({
+  id: String(raw._id ?? raw.id),
+  title: String(raw.title ?? ""),
+  content: String(raw.content ?? ""),
+  category: raw.category ?? null,
+  thumbnailUrl: raw.thumbnailUrl ?? null,
+  readTimeMinutes: Number(raw.readTimeMinutes ?? 0),
+  isActive: Boolean(raw.isActive ?? true),
+  sortOrder: Number(raw.sortOrder ?? 0),
+  createdAt: String(raw.createdAt ?? new Date().toISOString()),
+})
+
+export async function fetchAdminArticles(params?: {
+  page?: number
+  limit?: number
+  search?: string
+  category?: string
+  status?: "active" | "inactive" | "all"
+}): Promise<ApiListResponse<AdminArticle>> {
+  const query = new URLSearchParams()
+  if (params?.page) query.set("page", String(params.page))
+  if (params?.limit) query.set("limit", String(params.limit))
+  if (params?.search) query.set("search", params.search)
+  if (params?.category) query.set("category", params.category)
+  if (params?.status) query.set("status", params.status)
+
+  const qs = query.toString()
+  const path = `/api/admin/articles${qs ? `?${qs}` : ""}`
+
+  const res = await apiFetch<ApiListResponse<any>>(path, {}, { auth: true })
+  return {
+    ...res,
+    data: res.data.map(mapArticle),
+  }
+}
+
+type CreateArticlePayload = {
+  title: string
+  content: string
+  category?: string
+  readTimeMinutes: number
+  sortOrder?: number
+  isActive?: boolean
+  thumbnail?: File
+  thumbnailUrl?: string
+}
+
+type UpdateArticlePayload = Partial<CreateArticlePayload>
+
+export async function createArticle(payload: CreateArticlePayload): Promise<AdminArticle> {
+  const formData = new FormData()
+  
+  formData.append("title", payload.title)
+  formData.append("content", payload.content)
+  if (payload.category) formData.append("category", payload.category)
+  formData.append("readTimeMinutes", String(payload.readTimeMinutes))
+  if (payload.sortOrder !== undefined) formData.append("sortOrder", String(payload.sortOrder))
+  if (payload.isActive !== undefined) formData.append("isActive", String(payload.isActive))
+  
+  if (payload.thumbnail) formData.append("thumbnail", payload.thumbnail)
+  if (payload.thumbnailUrl) formData.append("thumbnailUrl", payload.thumbnailUrl)
+
+  const res = await apiFetch<ApiSuccessResponse<any>>(
+    "/api/admin/articles",
+    {
+      method: "POST",
+      body: formData,
+    },
+    { auth: true }
+  )
+
+  return mapArticle(res.data)
+}
+
+export async function updateArticle(id: string, payload: UpdateArticlePayload): Promise<AdminArticle> {
+  const formData = new FormData()
+  
+  if (payload.title) formData.append("title", payload.title)
+  if (payload.content !== undefined) formData.append("content", payload.content)
+  if (payload.category !== undefined) formData.append("category", payload.category || "")
+  if (payload.readTimeMinutes !== undefined) formData.append("readTimeMinutes", String(payload.readTimeMinutes))
+  if (payload.sortOrder !== undefined) formData.append("sortOrder", String(payload.sortOrder))
+  
+  if (payload.thumbnail) formData.append("thumbnail", payload.thumbnail)
+  if (payload.thumbnailUrl !== undefined) formData.append("thumbnailUrl", payload.thumbnailUrl || "")
+
+  const res = await apiFetch<ApiSuccessResponse<any>>(
+    `/api/admin/articles/${id}`,
+    {
+      method: "PATCH",
+      body: formData,
+    },
+    { auth: true }
+  )
+
+  return mapArticle(res.data)
+}
+
+export async function deleteArticle(id: string): Promise<void> {
+  await apiFetch<ApiSuccessResponse<void>>(
+    `/api/admin/articles/${id}`,
+    {
+      method: "DELETE",
+    },
+    { auth: true }
+  )
+}
+
 // Admin Authentication APIs
 
 export type Admin = {
