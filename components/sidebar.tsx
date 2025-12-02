@@ -1,7 +1,7 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { Users, FileText, Music, Video, Menu, X } from "lucide-react"
+import { Users, Music, Video, Menu, X } from "lucide-react"
 
 interface SidebarProps {
   activeSection: string
@@ -18,7 +18,6 @@ export function Sidebar({ activeSection, setActiveSection, isOpen, setIsOpen }: 
     { id: "users", label: "User Management", icon: Users },
     { id: "audios", label: "Audios", icon: Music },
     { id: "videos", label: "Videos", icon: Video },
-    { id: "learn-grow", label: "Learn & Grow", icon: FileText },
   ]
 
   return (

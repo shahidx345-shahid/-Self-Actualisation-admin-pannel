@@ -14,9 +14,6 @@ const AudioSection = lazy(() => import("./sections/audio").then((mod) => ({ defa
 const VideoSection = lazy(() =>
   import("./sections/video").then((mod) => ({ default: mod.VideoSection })),
 )
-const LearnGrowSection = lazy(() =>
-  import("./sections/learn-grow").then((mod) => ({ default: mod.LearnGrowSection })),
-)
 
 function SectionFallback() {
   return (
@@ -43,7 +40,6 @@ export function Dashboard({ activeSection }: DashboardProps) {
         {activeSection === "users" && <UserManagementSection />}
         {activeSection === "audios" && <AudioSection />}
         {activeSection === "videos" && <VideoSection />}
-        {activeSection === "learn-grow" && <LearnGrowSection />}
       </Suspense>
     </motion.div>
   )

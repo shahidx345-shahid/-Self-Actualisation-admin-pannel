@@ -85,6 +85,16 @@ async function apiFetch<T>(
   })
 
   if (!res.ok) {
+    // Handle authentication errors (401 Unauthorized, 403 Forbidden)
+    if (res.status === 401 || res.status === 403) {
+      // Token expired or invalid - clear token and redirect to login
+      auth.removeToken()
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        window.location.href = "/login"
+      }
+      throw new Error("Authentication failed. Please login again.")
+    }
+
     let message = `Request failed with status ${res.status}`
     try {
       const data = (await res.json()) as ApiErrorPayload
