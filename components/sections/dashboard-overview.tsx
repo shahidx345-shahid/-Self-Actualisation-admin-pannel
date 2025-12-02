@@ -1,16 +1,52 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { motion } from "framer-motion"
 import { Users, FileText, Music, Video } from "lucide-react"
+import { getDashboardStats, type DashboardStats } from "@/lib/api"
+
+function formatNumber(num: number): string {
+  return num.toLocaleString()
+}
 
 export function DashboardOverview() {
-  const stats = [
-    { label: "Total Users", value: "2,547", icon: Users, color: "bg-blue-100" },
-    { label: "Audio Files", value: "156", icon: Music, color: "bg-purple-100" },
-    { label: "Articles", value: "89", icon: FileText, color: "bg-green-100" },
-    { label: "Video Files", value: "73", icon: Video, color: "bg-pink-100" },
-  ]
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadStats = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const data = await getDashboardStats()
+        setStats(data)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load dashboard statistics"
+        setError(message)
+        console.error("Failed to load dashboard stats:", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadStats()
+  }, [])
+
+  const statsConfig = stats
+    ? [
+        { label: "Total Users", value: formatNumber(stats.totalUsers), icon: Users, color: "bg-blue-100" },
+        { label: "Audio Files", value: formatNumber(stats.totalAudios), icon: Music, color: "bg-purple-100" },
+        { label: "Articles", value: formatNumber(stats.totalArticles), icon: FileText, color: "bg-green-100" },
+        { label: "Video Files", value: formatNumber(stats.totalVideos), icon: Video, color: "bg-pink-100" },
+      ]
+    : [
+        { label: "Total Users", value: "—", icon: Users, color: "bg-blue-100" },
+        { label: "Audio Files", value: "—", icon: Music, color: "bg-purple-100" },
+        { label: "Articles", value: "—", icon: FileText, color: "bg-green-100" },
+        { label: "Video Files", value: "—", icon: Video, color: "bg-pink-100" },
+      ]
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -25,10 +61,30 @@ export function DashboardOverview() {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   }
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span>Loading dashboard statistics...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6 border-destructive/40 bg-destructive/5 text-destructive">
+        <p className="font-medium mb-2">Failed to load dashboard statistics</p>
+        <p className="text-sm">{error}</p>
+      </Card>
+    )
+  }
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {stats.map((stat) => {
+        {statsConfig.map((stat) => {
           const Icon = stat.icon
           return (
             <motion.div key={stat.label} variants={itemVariants}>

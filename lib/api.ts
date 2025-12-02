@@ -531,6 +531,115 @@ export async function getCurrentAdmin(): Promise<Admin> {
   return response.data.admin
 }
 
+// Admin Dashboard APIs
+
+export type DashboardStats = {
+  totalUsers: number
+  totalAudios: number
+  totalVideos: number
+  totalArticles: number
+}
+
+type DashboardResponse = {
+  success: boolean
+  message: string
+  data: {
+    stats: DashboardStats
+    admin: {
+      id: string
+      name: string
+      email: string
+    }
+    timestamp: string
+  }
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const response = await apiFetch<DashboardResponse>(
+    "/api/admin/dashboard",
+    {},
+    { auth: true }
+  )
+  return response.data.stats
+}
+
+// User Management APIs
+
+export type AdminUser = {
+  id: string
+  name?: string
+  email: string
+  isOAuthUser: boolean
+  oauthProvider?: string | null
+  avatar?: string | null
+  age?: number | null
+  focusAreas: string[]
+  isEmailVerified: boolean
+  lastLogin?: string | null
+  hasCompletedAssessment: boolean
+  assessmentCompletedAt?: string | null
+  currentSubscriptionType: "Free" | "Premium" | "Coach"
+  createdAt: string
+  updatedAt: string
+}
+
+const mapUser = (raw: any): AdminUser => ({
+  id: String(raw._id ?? raw.id),
+  name: raw.name ?? undefined,
+  email: String(raw.email ?? ""),
+  isOAuthUser: Boolean(raw.isOAuthUser ?? false),
+  oauthProvider: raw.oauthProvider ?? null,
+  avatar: raw.avatar ?? null,
+  age: raw.age ?? null,
+  focusAreas: Array.isArray(raw.focusAreas) ? raw.focusAreas : [],
+  isEmailVerified: Boolean(raw.isEmailVerified ?? false),
+  lastLogin: raw.lastLogin ? String(raw.lastLogin) : null,
+  hasCompletedAssessment: Boolean(raw.hasCompletedAssessment ?? false),
+  assessmentCompletedAt: raw.assessmentCompletedAt ? String(raw.assessmentCompletedAt) : null,
+  currentSubscriptionType: raw.currentSubscriptionType ?? "Free",
+  createdAt: String(raw.createdAt ?? new Date().toISOString()),
+  updatedAt: String(raw.updatedAt ?? new Date().toISOString()),
+})
+
+export async function fetchAdminUsers(params?: {
+  page?: number
+  limit?: number
+  search?: string
+}): Promise<ApiListResponse<AdminUser>> {
+  const query = new URLSearchParams()
+  if (params?.page) query.set("page", String(params.page))
+  if (params?.limit) query.set("limit", String(params.limit))
+  if (params?.search) query.set("search", params.search)
+
+  const qs = query.toString()
+  const path = `/api/admin/users${qs ? `?${qs}` : ""}`
+
+  const res = await apiFetch<ApiListResponse<any>>(path, {}, { auth: true })
+  return {
+    ...res,
+    data: res.data.map(mapUser),
+  }
+}
+
+export async function getAdminUserById(id: string): Promise<AdminUser> {
+  const res = await apiFetch<ApiSuccessResponse<any>>(
+    `/api/admin/users/${id}`,
+    {},
+    { auth: true }
+  )
+  return mapUser(res.data)
+}
+
+export async function deleteAdminUser(id: string): Promise<void> {
+  await apiFetch<ApiSuccessResponse<void>>(
+    `/api/admin/users/${id}`,
+    {
+      method: "DELETE",
+    },
+    { auth: true }
+  )
+}
+
 /**
  * Register admin (optional, for initial setup)
  */
